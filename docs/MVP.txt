@@ -1,0 +1,24 @@
+SSH
+├── SSH-01  Root login
+├── SSH-02  Password authentication
+└── SSH-03  SSH key/directory permissions
+
+USERS & PRIVILEGES
+├── USR-01  Extra UID 0 accounts
+├── USR-02  Empty passwords
+└── USR-03  Overly permissive sudo
+
+NETWORK
+├── NET-01  Legacy/cleartext listeners
+├── NET-02  Sensitive services exposed
+└── NET-03  Host firewall
+
+SERVICES
+├── SVC-01  Insecure legacy services
+├── SVC-02  Pending security updates
+└── SVC-03  Logging
+
+FILES
+├── FIL-01  passwd/shadow permissions
+├── FIL-02  SUID/SGID binaries
+└── FIL-03  World-writable system files
