@@ -217,6 +217,14 @@ class SystemInfo:
     def is_root(self) -> bool:
         return os.geteuid() == 0
 
+
+    def home_directory(self) -> str:
+        """Return the current user's home directory."""
+        import os
+
+        return os.path.expanduser("~")
+
+
     def hostname(self) -> str:
         return socket.gethostname()
 
@@ -369,6 +377,7 @@ class FakeSystemInfo:
         self._stats: dict[str, StatResult] = {}
         self._commands: dict[tuple[str, ...], CommandResult] = {}
         self._found: dict[FindPredicate, FindResult] = {}
+        self._find_files_result = []
 
     # --- configuring the fake (used by tests) -----------------------------
 
@@ -430,6 +439,11 @@ class FakeSystemInfo:
     def is_root(self) -> bool:
         return self._root
 
+    def home_directory(self) -> str:
+        """Return a fake home directory for tests."""
+        return "/home/testuser"
+
+
     def hostname(self) -> str:
         return self._hostname
 
@@ -458,7 +472,42 @@ class FakeSystemInfo:
             CommandResult(error=ErrorKind.TOOL_NOT_FOUND, detail=f"command not configured: {args[0]}"),
         )
 
-    def find_files(self, roots: list[str], predicate: FindPredicate) -> FindResult:
+    def find_files(
+        self,
+        roots: list[str],
+        predicate: FindPredicate,
+    ) -> FindResult:
+        """Return configured fake file-search results."""
         if not isinstance(predicate, FindPredicate):
-            raise ValueError("predicate must be a FindPredicate")
+            raise ValueError(f"Unsupported find predicate: {predicate!r}")
+
+        configured = self._found_files.get(predicate)
+
+        if configured is None:
+            return FindResult()
+
+        paths, unreadable_count = configured
+
+        return FindResult(
+           paths=sorted(paths),
+           unreadable_count=unreadable_count,
+        )
+
+    def find_files(
+        self,
+        roots: list[str],
+        predicate: FindPredicate,
+    ) -> FindResult:
+        """Return configured fake file-search results."""
+        if not isinstance(predicate, FindPredicate):
+             raise ValueError(f"Unsupported find predicate: {predicate!r}")
+
         return self._found.get(predicate, FindResult())
+
+
+    def add_find_files_result(self, paths: list[str]) -> None:
+        """Configure a fake result for find_files() in file-check tests."""
+        result = FindResult(paths=sorted(paths))
+
+        self._found[FindPredicate.SUID_SGID] = result
+        self._found[FindPredicate.WORLD_WRITABLE] = result
